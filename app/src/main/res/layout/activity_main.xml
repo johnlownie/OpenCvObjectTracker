@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:rsb="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <org.opencv.android.JavaCameraView
+        android:id="@+id/java_camera_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"/>
+
+    <org.florescu.android.rangeseekbar.RangeSeekBar
+        android:id="@+id/rsbHue"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:background="#fff"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        rsb:absoluteMaxValue="255"
+        rsb:absoluteMinValue="0"
+        rsb:showLabels="true"
+        rsb:textAboveThumbsColor="@android:color/holo_blue_dark" />
+
+    <org.florescu.android.rangeseekbar.RangeSeekBar
+        android:id="@+id/rsbSaturation"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:background="#fff"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        rsb:absoluteMaxValue="255"
+        rsb:absoluteMinValue="0"
+        rsb:showLabels="true"
+        rsb:textAboveThumbsColor="@android:color/holo_blue_dark" />
+
+    <org.florescu.android.rangeseekbar.RangeSeekBar
+        android:id="@+id/rsbValue"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:background="#fff"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        rsb:absoluteMaxValue="255"
+        rsb:absoluteMinValue="0"
+        rsb:showLabels="true"
+        rsb:textAboveThumbsColor="@android:color/holo_blue_dark" />
+
+    <ToggleButton
+        android:id="@+id/btnRawImage"
+        style="?metaButtonBarButtonStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_weight="1"
+        android:text="@string/btnRaw"
+        android:textOn="@string/btnRaw"
+        android:textOff="@string/btnRaw"
+        android:background="@drawable/toggle_button_custom"
+        android:textColor="@color/toggle_button_color"
+        android:checked="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnHSVImage"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ToggleButton
+        android:id="@+id/btnHSVImage"
+        style="?metaButtonBarButtonStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_weight="1"
+        android:text="@string/btnHSV"
+        android:textOn="@string/btnHSV"
+        android:textOff="@string/btnHSV"
+        android:background="@drawable/toggle_button_custom"
+        android:textColor="@color/toggle_button_color"
+        android:checked="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnThresholdImage"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btnRawImage" />
+
+    <ToggleButton
+        android:id="@+id/btnThresholdImage"
+        style="?metaButtonBarButtonStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_weight="1"
+        android:text="@string/btnThreshold"
+        android:textOn="@string/btnThreshold"
+        android:textOff="@string/btnThreshold"
+        android:background="@drawable/toggle_button_custom"
+        android:textColor="@color/toggle_button_color"
+        android:checked="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btnHSVImage" />
+
+    <ToggleButton
+        android:id="@+id/btnHue"
+        style="?metaButtonBarButtonStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_weight="1"
+        android:text="@string/btnHue"
+        android:textOn="@string/btnHue"
+        android:textOff="@string/btnHue"
+        android:background="@drawable/toggle_button_custom"
+        android:textColor="@color/toggle_button_color"
+        android:checked="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnSaturation"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ToggleButton
+        android:id="@+id/btnSaturation"
+        style="?metaButtonBarButtonStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_weight="1"
+        android:text="@string/btnSaturation"
+        android:textOn="@string/btnSaturation"
+        android:textOff="@string/btnSaturation"
+        android:background="@drawable/toggle_button_custom"
+        android:textColor="@color/toggle_button_color"
+        android:checked="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnValue"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btnHue" />
+
+    <ToggleButton
+        android:id="@+id/btnValue"
+        style="?metaButtonBarButtonStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_weight="1"
+        android:text="@string/btnValue"
+        android:textOn="@string/btnValue"
+        android:textOff="@string/btnValue"
+        android:background="@drawable/toggle_button_custom"
+        android:textColor="@color/toggle_button_color"
+        android:checked="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btnSaturation" />
+
+    <android.support.constraint.Group
+        android:id="@+id/imgGroup"
+        android:layout_width="27dp"
+        android:layout_height="26dp"
+        android:visibility="invisible"
+        app:constraint_referenced_ids="btnRawImage,btnHSVImage,btnThresholdImage" />
+
+    <android.support.constraint.Group
+        android:id="@+id/hsvGroup"
+        android:layout_width="27dp"
+        android:layout_height="26dp"
+        android:visibility="invisible"
+        app:constraint_referenced_ids="btnHue,btnSaturation,btnValue" />
+
+</android.support.constraint.ConstraintLayout>

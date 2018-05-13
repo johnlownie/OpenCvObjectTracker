@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">OpenCvCamera</string>
+
+    <string name="btnRaw">Raw</string>
+    <string name="btnHSV">HSV</string>
+    <string name="btnThreshold">Threshold</string>
+    <string name="btnHue">Hue</string>
+    <string name="btnSaturation">Saturation</string>
+    <string name="btnValue">Value</string>
+
+    <string name="request_permission">This app needs camera permission</string>
+</resources>

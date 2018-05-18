@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenCvCamera</string>
+    <string name="app_name">OpenCvObjectTracker</string>
 
     <string name="btnRaw">Raw</string>
     <string name="btnHSV">HSV</string>

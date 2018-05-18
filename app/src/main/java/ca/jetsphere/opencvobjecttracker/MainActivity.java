@@ -84,17 +84,17 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
         rsbHue = findViewById(R.id.rsbHue);
         rsbHue.setRangeValues(0, 255);
-        rsbHue.setSelectedMinValue(0);
-        rsbHue.setSelectedMaxValue(20);
+        rsbHue.setSelectedMinValue(40);
+        rsbHue.setSelectedMaxValue(80);
 
         rsbSaturation = findViewById(R.id.rsbSaturation);
         rsbSaturation.setRangeValues(0, 255);
-        rsbSaturation.setSelectedMinValue(0);
+        rsbSaturation.setSelectedMinValue(100);
         rsbSaturation.setSelectedMaxValue(255);
 
         rsbValue = findViewById(R.id.rsbValue);
         rsbValue.setRangeValues(0, 255);
-        rsbValue.setSelectedMinValue(250);
+        rsbValue.setSelectedMinValue(30);
         rsbValue.setSelectedMaxValue(255);
 
         mImgGroup = findViewById(R.id.imgGroup);
@@ -342,6 +342,13 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         }
 
         javaCameraView = findViewById(R.id.java_camera_view);
+        javaCameraView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+
         javaCameraView.setVisibility(SurfaceView.VISIBLE);
         javaCameraView.setCvCameraViewListener(this);
 

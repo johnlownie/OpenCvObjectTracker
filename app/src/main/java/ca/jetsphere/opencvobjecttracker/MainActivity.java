@@ -52,6 +52,8 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
     JavaCameraView javaCameraView;
     Mat mRgba, imgHSV, imgThreshold;
+    final int screenWidth = 1280;
+    final int screenHeight = 720;
     int iImgType = 0;
 
     RangeSeekBar rsbHue, rsbSaturation,  rsbValue;
@@ -284,10 +286,10 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         Mat dilateElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(8, 8));
 
         Imgproc.erode(threshold, threshold, erodeElement);
-        Imgproc.erode(threshold, threshold, erodeElement);
+//        Imgproc.erode(threshold, threshold, erodeElement);
 
         Imgproc.dilate(threshold, threshold, dilateElement);
-        Imgproc.dilate(threshold, threshold, dilateElement);
+//        Imgproc.dilate(threshold, threshold, dilateElement);
     }
 
     /**
@@ -342,6 +344,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         }
 
         javaCameraView = findViewById(R.id.java_camera_view);
+        javaCameraView.setMaxFrameSize(screenWidth, screenHeight);
         javaCameraView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
                 | View.SYSTEM_UI_FLAG_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -351,6 +354,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
         javaCameraView.setVisibility(SurfaceView.VISIBLE);
         javaCameraView.setCvCameraViewListener(this);
+        javaCameraView.enableFpsMeter();
 
         javaCameraView.setOnClickListener(new View.OnClickListener() {
             @Override

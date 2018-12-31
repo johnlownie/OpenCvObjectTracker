@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">OpenCvObjectTracker</string>
 
+    <string name="btnResolution">Resolution</string>
     <string name="btnRaw">Raw</string>
     <string name="btnHSV">HSV</string>
     <string name="btnThreshold">Threshold</string>

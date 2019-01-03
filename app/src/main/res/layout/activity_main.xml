@@ -73,27 +73,27 @@
         android:textColor="@color/toggle_button_color"
         android:checked="true"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/btnHSVImage"
+        app:layout_constraintEnd_toStartOf="@+id/btnThresholdImage"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <ToggleButton
-        android:id="@+id/btnHSVImage"
-        style="?metaButtonBarButtonStyle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_weight="1"
-        android:text="@string/btnHSV"
-        android:textOn="@string/btnHSV"
-        android:textOff="@string/btnHSV"
-        android:background="@drawable/toggle_button_custom"
-        android:textColor="@color/toggle_button_color"
-        android:checked="false"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/btnThresholdImage"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/btnRawImage" />
+    <!--<ToggleButton-->
+        <!--android:id="@+id/btnHSVImage"-->
+        <!--style="?metaButtonBarButtonStyle"-->
+        <!--android:layout_width="0dp"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_marginBottom="8dp"-->
+        <!--android:layout_weight="1"-->
+        <!--android:text="@string/btnHSV"-->
+        <!--android:textOn="@string/btnHSV"-->
+        <!--android:textOff="@string/btnHSV"-->
+        <!--android:background="@drawable/toggle_button_custom"-->
+        <!--android:textColor="@color/toggle_button_color"-->
+        <!--android:checked="false"-->
+        <!--app:layout_constraintBottom_toBottomOf="parent"-->
+        <!--app:layout_constraintEnd_toStartOf="@+id/btnThresholdImage"-->
+        <!--app:layout_constraintHorizontal_bias="0.5"-->
+        <!--app:layout_constraintStart_toEndOf="@+id/btnRawImage" />-->
 
     <ToggleButton
         android:id="@+id/btnThresholdImage"
@@ -110,9 +110,47 @@
         android:textColor="@color/toggle_button_color"
         android:checked="false"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnTrackImage"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/btnHSVImage" />
+        app:layout_constraintStart_toEndOf="@+id/btnRawImage" />
+
+    <ToggleButton
+        android:id="@+id/btnTrackImage"
+        style="?metaButtonBarButtonStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_weight="1"
+        android:text="@string/btnTrack"
+        android:textOn="@string/btnTrack"
+        android:textOff="@string/btnTrack"
+        android:background="@drawable/toggle_button_custom"
+        android:textColor="@color/toggle_button_color"
+        android:checked="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnConnectImage"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btnThresholdImage" />
+
+    <ToggleButton
+        android:id="@+id/btnConnectImage"
+        style="?metaButtonBarButtonStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_weight="1"
+        android:text="@string/btnConnect"
+        android:textOn="@string/btnConnect"
+        android:textOff="@string/btnConnect"
+        android:background="@drawable/toggle_button_custom"
+        android:textColor="@color/toggle_button_color"
+        android:checked="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+       app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btnTrackImage" />
 
     <ToggleButton
         android:id="@+id/btnHue"
@@ -175,7 +213,7 @@
         android:layout_width="27dp"
         android:layout_height="26dp"
         android:visibility="invisible"
-        app:constraint_referenced_ids="btnRawImage,btnHSVImage,btnThresholdImage" />
+        app:constraint_referenced_ids="btnRawImage,btnThresholdImage,btnTrackImage,btnConnectImage" />
 
     <android.support.constraint.Group
         android:id="@+id/hsvGroup"

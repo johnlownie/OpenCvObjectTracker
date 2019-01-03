@@ -6,7 +6,11 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.Fragment;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
@@ -18,6 +22,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import org.florescu.android.rangeseekbar.RangeSeekBar;
@@ -30,14 +35,22 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  *
@@ -48,15 +61,24 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     private static final String FRAGMENT_DIALOG = "dialog";
     private static final int REQUEST_CAMERA_PERMISSION = 1;
 
+    private final String DEVICE_ADDRESS = "98:D3:31:FC:69:F7";
+    private final UUID PORT_UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+
+    private OutputStream outputStream;
+    private BluetoothDevice bluetoothDevice;
+    private BluetoothSocket bluetoothSocket;
+
     private View mImgGroup, mHsvGroup;
 
     JavaCameraView javaCameraView;
-    Mat mRgba, imgHSV, imgThreshold;
-    final int screenWidth = 1280;
-    final int screenHeight = 720;
+    Mat mRgba, imgBlurred, imgHSV, imgThreshold;
+    final int screenWidth = 1024; // 1280;
+    final int screenHeight = 576; //  720;
     int iImgType = 0;
 
     RangeSeekBar rsbHue, rsbSaturation,  rsbValue;
+
+    Deque pts = new ArrayDeque();
 
     BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -86,51 +108,54 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
         rsbHue = findViewById(R.id.rsbHue);
         rsbHue.setRangeValues(0, 255);
-        rsbHue.setSelectedMinValue(40);
-        rsbHue.setSelectedMaxValue(80);
+        rsbHue.setSelectedMinValue(29);
+        rsbHue.setSelectedMaxValue(64);
 
         rsbSaturation = findViewById(R.id.rsbSaturation);
         rsbSaturation.setRangeValues(0, 255);
-        rsbSaturation.setSelectedMinValue(100);
+        rsbSaturation.setSelectedMinValue(86);
         rsbSaturation.setSelectedMaxValue(255);
 
         rsbValue = findViewById(R.id.rsbValue);
         rsbValue.setRangeValues(0, 255);
-        rsbValue.setSelectedMinValue(30);
+        rsbValue.setSelectedMinValue(6);
         rsbValue.setSelectedMaxValue(255);
 
         mImgGroup = findViewById(R.id.imgGroup);
         mHsvGroup = findViewById(R.id.hsvGroup);
 
         final ToggleButton btnRawImage = findViewById(R.id.btnRawImage);
-        final ToggleButton btnHSVImage = findViewById(R.id.btnHSVImage);
+//        final ToggleButton btnHSVImage = findViewById(R.id.btnHSVImage);
         final ToggleButton btnThresholdImage = findViewById(R.id.btnThresholdImage);
+        final ToggleButton btnTrackImage = findViewById(R.id.btnTrackImage);
+        final ToggleButton btnConnectImage = findViewById(R.id.btnConnectImage);
 
         btnRawImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 btnRawImage.setChecked(true);
-                btnHSVImage.setChecked(false);
+//                btnHSVImage.setChecked(false);
                 btnThresholdImage.setChecked(false);
                 iImgType = 0;
             }
         });
 
-        btnHSVImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                btnRawImage.setChecked(false);
-                btnHSVImage.setChecked(true);
-                btnThresholdImage.setChecked(false);
-                iImgType = 1;
-            }
-        });
+//        btnHSVImage.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                btnRawImage.setChecked(false);
+//                btnHSVImage.setChecked(true);
+//                btnThresholdImage.setChecked(false);
+//                btnTrackImage.setChecked(false);
+//                iImgType = 1;
+//            }
+//        });
 
         btnThresholdImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 btnRawImage.setChecked(false);
-                btnHSVImage.setChecked(false);
+//                btnHSVImage.setChecked(false);
                 btnThresholdImage.setChecked(true);
 
                 mImgGroup.setVisibility(View.GONE);
@@ -138,6 +163,27 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
                 rsbHue.setVisibility(View.VISIBLE);
 
                 iImgType = 2;
+            }
+        });
+
+        btnTrackImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                btnTrackImage.setChecked(true);
+            }
+        });
+
+        btnConnectImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if ( bluetoothDevice == null || !bluetoothSocket.isConnected()) {
+                    if ( bluetoothDevice == null) bluetoothDevice = BTInit();
+                    btnConnectImage.setChecked(bluetoothDevice == null ? false : BTConnect());
+                }
+                else {
+                    BTDisconnect();
+                    btnConnectImage.setChecked(false);
+                }
             }
         });
 
@@ -221,6 +267,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     @Override
     public void onCameraViewStarted(int width, int height) {
         mRgba = new Mat(height, width, CvType.CV_8UC4);
+        imgBlurred = new Mat(height, width, CvType.CV_8UC4);
         imgHSV = new Mat(height, width, CvType.CV_8UC4);
         imgThreshold = new Mat(height, width, CvType.CV_8UC4);
     }
@@ -234,10 +281,17 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
 
-        Imgproc.cvtColor(mRgba, imgHSV, Imgproc.COLOR_BGR2HSV);
+        Imgproc.GaussianBlur(mRgba, imgBlurred, new Size(3, 3), 0);
+        Imgproc.cvtColor(imgBlurred, imgHSV, Imgproc.COLOR_BGR2HSV);
         Core.inRange(imgHSV, new Scalar(((int) rsbHue.getSelectedMinValue()), ((int) rsbSaturation.getSelectedMinValue()), ((int)rsbValue.getSelectedMinValue())), new Scalar(((int) rsbHue.getSelectedMaxValue()), ((int) rsbSaturation.getSelectedMaxValue()), ((int) rsbValue.getSelectedMaxValue())), imgThreshold);
         morphOps(imgThreshold);
         trackFilteredObject(mRgba, imgThreshold);
+
+
+//        Imgproc.cvtColor(mRgba, imgHSV, Imgproc.COLOR_BGR2HSV);
+//        Core.inRange(imgHSV, new Scalar(((int) rsbHue.getSelectedMinValue()), ((int) rsbSaturation.getSelectedMinValue()), ((int)rsbValue.getSelectedMinValue())), new Scalar(((int) rsbHue.getSelectedMaxValue()), ((int) rsbSaturation.getSelectedMaxValue()), ((int) rsbValue.getSelectedMaxValue())), imgThreshold);
+//        morphOps(imgThreshold);
+//        trackFilteredObject(mRgba, imgThreshold);
 
         switch (iImgType) {
             case 0 : return mRgba;
@@ -286,10 +340,10 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         Mat dilateElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(8, 8));
 
         Imgproc.erode(threshold, threshold, erodeElement);
-//        Imgproc.erode(threshold, threshold, erodeElement);
+        Imgproc.erode(threshold, threshold, erodeElement);
 
         Imgproc.dilate(threshold, threshold, dilateElement);
-//        Imgproc.dilate(threshold, threshold, dilateElement);
+        Imgproc.dilate(threshold, threshold, dilateElement);
     }
 
     /**
@@ -302,31 +356,59 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
         Mat hierarchy = new Mat();
         Imgproc.findContours(temp, contours, hierarchy, Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
-        if (contours.size() < 50) {
-            for (MatOfPoint mop : contours) {
-                Moments moment = Imgproc.moments(mop);
 
-                if (moment.m00 < 20 * 20) continue;
+        if (contours == null || contours.isEmpty()) return;
 
-                int x = ((int) (moment.m10/moment.m00));
-                int y = ((int) (moment.m01/moment.m00));
+        int maxIndex = getMaxContour(contours);
+        if (maxIndex == -1) return;
 
-                Imgproc.putText(cameraFeed, "Tracking Object", new Point(0, 50), 2, 1, new Scalar(0, 255, 0), 2);
-                drawObject(x, y, cameraFeed);
-            }
-        } else Imgproc.putText(cameraFeed, "Too much noise - adjust filter", new Point(0, 50), 1, 2, new Scalar(0, 0, 255), 2);
+        MatOfPoint maxContour = contours.get(maxIndex);
+        Point point = new Point(); float[] radius = new float[contours.size()];
+        Imgproc.minEnclosingCircle(new MatOfPoint2f(maxContour.toArray()), point, radius);
+
+        Moments moment = Imgproc.moments(maxContour);
+        int x = (int) (moment.m10/moment.m00);
+        int y = (int) (moment.m01/moment.m00);
+        Point center = new Point(x, y);
+
+        if (radius != null && radius.length > 0 && radius[0] > 10) {
+            drawObject(cameraFeed, x, y, radius[0], center );
+            pts.add(center);
+        }
+
+//        Iterator it = pts.iterator();
+//        while (it.hasNext()) {
+//            Point pt = ( Point ) it.next();
+//        }
+
+//        int x = ((int) (moment.m10/moment.m00));
+//        int y = ((int) (moment.m01/moment.m00));
+//
+//        for (MatOfPoint mop : contours) {
+//            double area = Imgproc.contourArea(mop);
+//            if (area < 3000) continue;
+//
+//            Moments moment = Imgproc.moments(mop);
+//
+//            if (moment.m00 < 20 * 20) continue;
+//
+//            int x = ((int) (moment.m10/moment.m00));
+//            int y = ((int) (moment.m01/moment.m00));
+//
+//            Point point = new Point(x, y);
+//
+//            Imgproc.putText(cameraFeed, "TO: " + area, new Point(0, 50), 2, 1, new Scalar(0, 255, 0), 2);
+//            drawObject(x, y, cameraFeed);
+//        }
+//        } else Imgproc.putText(cameraFeed, "Too much noise - adjust filter", new Point(0, 50), 1, 2, new Scalar(0, 0, 255), 2);
     }
 
     /**
      *
      */
-    private void drawObject(int x, int y, Mat cameraFeed) {
-        Imgproc.circle(cameraFeed, new Point(x, y), 20, new Scalar(0, 255, 0), 2);
-
-        if (y - 25 > 0) Imgproc.line(cameraFeed, new Point(x, y), new Point(x, y - 25), new Scalar(0, 255, 0), 2);
-        else Imgproc.line(cameraFeed, new Point(x,y), new Point(x, 0), new Scalar(0, 255, 0), 2);
-
-        Imgproc.putText(cameraFeed, x + ", " + y, new Point(x, y + 30), 1, 1, new Scalar(0, 255, 0), 2);
+    private void drawObject(Mat cameraFeed, int x, int y, float radius, Point center ) {
+        Imgproc.circle(cameraFeed, new Point(x, y), (int) radius, new Scalar(0, 255, 0), 2);
+        Imgproc.circle(cameraFeed, center, 5, new Scalar(0, 0, 255), -1);
     }
 
     private void requestCameraPermission() {
@@ -377,4 +459,96 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
             mImgGroup.setVisibility(View.VISIBLE);
         }
     }
+
+    /**
+     *
+     */
+    private BluetoothDevice BTInit() {
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        if(bluetoothAdapter == null) { Toast.makeText(getApplicationContext(), "Device doesn't support bluetooth", Toast.LENGTH_SHORT).show(); return null; }
+
+        if(!bluetoothAdapter.isEnabled()) {
+            Intent enableAdapter = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableAdapter, 0);
+
+            try { Thread.sleep(1000); } catch(InterruptedException e) { e.printStackTrace(); }
+        }
+
+        Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();
+
+        if(bondedDevices.isEmpty())
+
+        { Toast.makeText(getApplicationContext(), "Please pair the device first", Toast.LENGTH_SHORT).show(); return null; }
+
+        for(BluetoothDevice device : bondedDevices) {
+            if(device.getAddress().equals(DEVICE_ADDRESS)) {
+                return device;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     *
+     */
+    private boolean BTConnect()
+    {
+        boolean connected = true;
+
+        try {
+            bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(PORT_UUID); //Creates a socket to handle the outgoing connection
+            bluetoothSocket.connect();
+
+            Toast.makeText(getApplicationContext(), "Connection to bluetooth device successful", Toast.LENGTH_LONG).show();
+        }
+        catch(IOException e) { e.printStackTrace(); connected = false; }
+
+        if (connected) {
+            try { outputStream = bluetoothSocket.getOutputStream(); } catch (IOException e) { e.printStackTrace(); }
+        }
+
+        return connected;
+    }
+
+    /**
+     *
+     */
+    private void BTDisconnect()
+    {
+        try {
+
+            outputStream.flush(); outputStream.close(); bluetoothSocket.close(); bluetoothDevice = null;
+
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    /**
+     *
+     */
+    private void SendCommand(String command)
+    {
+        try { outputStream.write(command.getBytes()); } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    /**
+     *
+     */
+    private int getMaxContour(List<MatOfPoint> contours)
+    {
+        int currentIndex = 0, maxIndex = -1;
+        double maxArea = 0.0;
+
+        for (MatOfPoint mop : contours) {
+            double area = Imgproc.contourArea(mop);
+            if (area > maxArea) { maxArea = area; maxIndex = currentIndex; }
+            currentIndex++;
+        }
+
+        Log.i(TAG, "Area: " + maxArea + " - Index: " + maxIndex);
+
+        return maxIndex;
+    }
+
 }

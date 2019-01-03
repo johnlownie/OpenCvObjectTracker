@@ -8,6 +8,8 @@
     <string name="btnHue">Hue</string>
     <string name="btnSaturation">Saturation</string>
     <string name="btnValue">Value</string>
+    <string name="btnTrack">Track</string>
+    <string name="btnConnect">Connect</string>
 
     <string name="request_permission">This app needs camera permission</string>
 </resources>

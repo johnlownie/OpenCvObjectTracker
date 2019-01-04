@@ -71,7 +71,9 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     private View mImgGroup, mHsvGroup;
 
     JavaCameraView javaCameraView;
-    Mat mRgba, imgBlurred, imgHSV, imgThreshold;
+    Mat mRgba, imgBlurred, imgHSV, imgThreshold, imgTemp;
+    Mat erodeElement, dilateElement;
+
     final int screenWidth = 1024; // 1280;
     final int screenHeight = 576; //  720;
     int iImgType = 0;
@@ -108,12 +110,12 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
         rsbHue = findViewById(R.id.rsbHue);
         rsbHue.setRangeValues(0, 255);
-        rsbHue.setSelectedMinValue(29);
-        rsbHue.setSelectedMaxValue(64);
+        rsbHue.setSelectedMinValue(76);
+        rsbHue.setSelectedMaxValue(96);
 
         rsbSaturation = findViewById(R.id.rsbSaturation);
         rsbSaturation.setRangeValues(0, 255);
-        rsbSaturation.setSelectedMinValue(86);
+        rsbSaturation.setSelectedMinValue(68);
         rsbSaturation.setSelectedMaxValue(255);
 
         rsbValue = findViewById(R.id.rsbValue);
@@ -270,6 +272,9 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         imgBlurred = new Mat(height, width, CvType.CV_8UC4);
         imgHSV = new Mat(height, width, CvType.CV_8UC4);
         imgThreshold = new Mat(height, width, CvType.CV_8UC4);
+
+        erodeElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
+        dilateElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(8, 8));
     }
 
     @Override
@@ -281,11 +286,16 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.rgba();
 
-        Imgproc.GaussianBlur(mRgba, imgBlurred, new Size(3, 3), 0);
+        Imgproc.GaussianBlur(mRgba, imgBlurred, new Size(11, 11), 0);
         Imgproc.cvtColor(imgBlurred, imgHSV, Imgproc.COLOR_BGR2HSV);
         Core.inRange(imgHSV, new Scalar(((int) rsbHue.getSelectedMinValue()), ((int) rsbSaturation.getSelectedMinValue()), ((int)rsbValue.getSelectedMinValue())), new Scalar(((int) rsbHue.getSelectedMaxValue()), ((int) rsbSaturation.getSelectedMaxValue()), ((int) rsbValue.getSelectedMaxValue())), imgThreshold);
-        morphOps(imgThreshold);
-        trackFilteredObject(mRgba, imgThreshold);
+
+        Imgproc.erode(imgThreshold, imgThreshold, erodeElement, new Point(-1, -1), 2);
+        Imgproc.dilate(imgThreshold, imgThreshold, dilateElement, new Point(-1, -1), 2);
+
+        imgTemp = new Mat(); imgThreshold.copyTo(imgTemp);
+
+        trackFilteredObject(mRgba, imgTemp);
 
 
 //        Imgproc.cvtColor(mRgba, imgHSV, Imgproc.COLOR_BGR2HSV);
@@ -335,27 +345,9 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     /**
      *
      */
-    private void morphOps(Mat threshold) {
-        Mat erodeElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
-        Mat dilateElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(8, 8));
-
-        Imgproc.erode(threshold, threshold, erodeElement);
-        Imgproc.erode(threshold, threshold, erodeElement);
-
-        Imgproc.dilate(threshold, threshold, dilateElement);
-        Imgproc.dilate(threshold, threshold, dilateElement);
-    }
-
-    /**
-     *
-     */
     private void trackFilteredObject(Mat cameraFeed, Mat threshold) {
-        Mat temp = new Mat();
-        threshold.copyTo(temp);
-
         List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-        Mat hierarchy = new Mat();
-        Imgproc.findContours(temp, contours, hierarchy, Imgproc.RETR_CCOMP, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(threshold, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
         if (contours == null || contours.isEmpty()) return;
 
@@ -372,7 +364,9 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         Point center = new Point(x, y);
 
         if (radius != null && radius.length > 0 && radius[0] > 10) {
-            drawObject(cameraFeed, x, y, radius[0], center );
+            Log.i(TAG, "Radius: " + radius.length + " - X: " + x + " - Y: " + y);
+            Imgproc.circle(cameraFeed, new Point(x, y), (int) radius[0], new Scalar(0, 255, 0), 2);
+            Imgproc.circle(cameraFeed, center, 5, new Scalar(0, 0, 255), -1);
             pts.add(center);
         }
 
@@ -401,14 +395,6 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 //            drawObject(x, y, cameraFeed);
 //        }
 //        } else Imgproc.putText(cameraFeed, "Too much noise - adjust filter", new Point(0, 50), 1, 2, new Scalar(0, 0, 255), 2);
-    }
-
-    /**
-     *
-     */
-    private void drawObject(Mat cameraFeed, int x, int y, float radius, Point center ) {
-        Imgproc.circle(cameraFeed, new Point(x, y), (int) radius, new Scalar(0, 255, 0), 2);
-        Imgproc.circle(cameraFeed, center, 5, new Scalar(0, 0, 255), -1);
     }
 
     private void requestCameraPermission() {
